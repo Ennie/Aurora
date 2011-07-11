@@ -437,8 +437,9 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		Aurora.SetBD(PVPBannerFrame)
 		Aurora.SetBD(PetStableFrame)
 		Aurora.SetBD(EncounterJournal)
+		Aurora.SetBD(WorldStateScoreFrame)
 
-		local FrameBDs = {"StaticPopup1", "StaticPopup2", "GameMenuFrame", "InterfaceOptionsFrame", "VideoOptionsFrame", "AudioOptionsFrame", "LFDDungeonReadyStatus", "ChatConfigFrame", "WorldStateScoreFrame", "StackSplitFrame", "AddFriendFrame", "FriendsFriendsFrame", "ColorPickerFrame", "ReadyCheckFrame", "LFDDungeonReadyDialog", "LFDRoleCheckPopup", "RolePollPopup", "GuildInviteFrame", "ChannelFrameDaughterFrame"}
+		local FrameBDs = {"StaticPopup1", "StaticPopup2", "GameMenuFrame", "InterfaceOptionsFrame", "VideoOptionsFrame", "AudioOptionsFrame", "LFDDungeonReadyStatus", "ChatConfigFrame", "StackSplitFrame", "AddFriendFrame", "FriendsFriendsFrame", "ColorPickerFrame", "ReadyCheckFrame", "LFDDungeonReadyDialog", "LFDRoleCheckPopup", "RolePollPopup", "GuildInviteFrame", "ChannelFrameDaughterFrame"}
 		for i = 1, #FrameBDs do
 			FrameBD = _G[FrameBDs[i]]
 			Aurora.CreateBD(FrameBD)
@@ -998,10 +999,7 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 			Aurora.CreateBD(slot.bd, 0)
 		end
 
-		local slothandler = CreateFrame("Frame")
-		slothandler:RegisterEvent("VARIABLES_LOADED")
-		slothandler:RegisterEvent("UNIT_INVENTORY_CHANGED")
-		slothandler:SetScript("OnEvent", function()
+		hooksecurefunc("PaperDollItemSlotButton_Update", function()
 			for i = 1, #slots do
 				local slot = _G["Character"..slots[i].."Slot"]
 				local ic = _G["Character"..slots[i].."SlotIconTexture"]
@@ -1173,6 +1171,33 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		pvpbg:SetPoint("BOTTOMRIGHT", PVPTeamManagementFrameFlag5)
 		Aurora.CreateBD(pvpbg, .25)
 
+		PVPFrameConquestBarLeft:Hide()
+		PVPFrameConquestBarMiddle:Hide()
+		PVPFrameConquestBarRight:Hide()
+		PVPFrameConquestBarBG:Hide()
+		PVPFrameConquestBarShadow:Hide()
+		PVPFrameConquestBarCap1:SetAlpha(0)
+		PVPFrameConquestBarCap1MarkerTexture:Hide()
+
+		for i = 1, 4 do
+			_G["PVPFrameConquestBarDivider"..i]:Hide()
+		end
+
+		PVPFrameConquestBarProgress:SetTexture(Aurora.backdrop)
+		PVPFrameConquestBarProgress:SetVertexColor(.9, 0, 0)
+
+		local cap = PVPFrameConquestBarCap1Marker:CreateTexture(nil, "OVERLAY")
+		cap:SetSize(1, 14)
+		cap:SetPoint("CENTER")
+		cap:SetTexture(Aurora.backdrop)
+		cap:SetVertexColor(0, 0, 0)
+
+		local qbg = CreateFrame("Frame", nil, PVPFrameConquestBar)
+		qbg:SetPoint("TOPLEFT", -1, -2)
+		qbg:SetPoint("BOTTOMRIGHT", 1, 2)
+		qbg:SetFrameLevel(PVPFrameConquestBar:GetFrameLevel()-1)
+		Aurora.CreateBD(qbg, .25)
+
 		-- StaticPopup
 
 		for i = 1, 2 do
@@ -1217,13 +1242,52 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		encounterbd:SetPoint("BOTTOMRIGHT", 1, -1)
 		Aurora.CreateBD(encounterbd, 0)
 
+		-- PvP cap bar
+
+		local function CaptureBar()
+			for i = 1, NUM_EXTENDED_UI_FRAMES do
+				local barname = "WorldStateCaptureBar"..i
+				local bar = _G[barname]
+
+				if bar and bar:IsShown() then
+					bar:ClearAllPoints()
+					bar:SetPoint("TOP", UIParent, "TOP", 0, -120)
+					if not bar.skinned then
+						_G[barname.."LeftBar"]:SetTexture(Aurora.backdrop)
+						_G[barname.."RightBar"]:SetTexture(Aurora.backdrop)
+						_G[barname.."MiddleBar"]:SetTexture(Aurora.backdrop)
+						_G[barname.."LeftBar"]:SetGradient("VERTICAL", .1, .1, .9, .2, .3, 1)
+						_G[barname.."RightBar"]:SetGradient("VERTICAL", .7, .1, .1, .9, .2, .2)
+						_G[barname.."MiddleBar"]:SetGradient("VERTICAL", .8, .8, .8, 1, 1, 1)
+						_G[barname.."RightLine"]:SetAlpha(0)
+						_G[barname.."LeftLine"]:SetAlpha(0)
+						select(4, bar:GetRegions()):Hide()
+						_G[barname.."LeftIconHighlight"]:SetAlpha(0)
+						_G[barname.."RightIconHighlight"]:SetAlpha(0)
+						bar.bg = CreateFrame("Frame", nil, bar)
+						bar.bg:SetPoint("TOPLEFT", _G[barname.."LeftBar"], -1, 1)
+						bar.bg:SetPoint("BOTTOMRIGHT", _G[barname.."RightBar"], 1, -1)
+						bar.bg:SetFrameLevel(0)
+						bar.bgmiddle = CreateFrame("Frame", nil, bar)
+						bar.bgmiddle:SetPoint("TOPLEFT", _G[barname.."MiddleBar"], -1, 1)
+						bar.bgmiddle:SetPoint("BOTTOMRIGHT", _G[barname.."MiddleBar"], 1, -1)
+						Aurora.CreateSD(bar.bg, 5, 0, 0, 0, 1, -2)
+						Aurora.CreateBD(bar.bgmiddle, 0)
+						bar.skinned = true
+					end
+				end
+			end
+		end
+
+		hooksecurefunc("WorldStateAlwaysUpFrame_Update", CaptureBar)
+
 		-- [[ Hide regions ]]
 
-		local bglayers = {"FriendsFrame", "SpellBookFrame", "LFDParentFrame", "LFDParentFrameInset", "WhoFrameColumnHeader1", "WhoFrameColumnHeader2", "WhoFrameColumnHeader3", "WhoFrameColumnHeader4", "RaidInfoInstanceLabel", "RaidInfoIDLabel", "CharacterFrame", "CharacterFrameInset", "CharacterFrameInsetRight", "GossipFrameGreetingPanel", "PVPFrame", "PVPFrameInset", "PVPFrameTopInset", "PVPTeamManagementFrame", "PVPTeamManagementFrameHeader1", "PVPTeamManagementFrameHeader2", "PVPTeamManagementFrameHeader3", "PVPTeamManagementFrameHeader4", "PVPBannerFrame", "PVPBannerFrameInset", "LFRQueueFrame", "LFRBrowseFrame", "HelpFrameMainInset", "CharacterModelFrame", "HelpFrame", "HelpFrameLeftInset", "QuestFrameDetailPanel", "QuestFrameProgressPanel", "QuestFrameRewardPanel"}
+		local bglayers = {"FriendsFrame", "SpellBookFrame", "LFDParentFrame", "LFDParentFrameInset", "WhoFrameColumnHeader1", "WhoFrameColumnHeader2", "WhoFrameColumnHeader3", "WhoFrameColumnHeader4", "RaidInfoInstanceLabel", "RaidInfoIDLabel", "CharacterFrame", "CharacterFrameInset", "CharacterFrameInsetRight", "GossipFrameGreetingPanel", "PVPFrame", "PVPFrameInset", "PVPFrameTopInset", "PVPTeamManagementFrame", "PVPTeamManagementFrameHeader1", "PVPTeamManagementFrameHeader2", "PVPTeamManagementFrameHeader3", "PVPTeamManagementFrameHeader4", "PVPBannerFrame", "PVPBannerFrameInset", "LFRQueueFrame", "LFRBrowseFrame", "HelpFrameMainInset", "CharacterModelFrame", "HelpFrame", "HelpFrameLeftInset", "QuestFrameDetailPanel", "QuestFrameProgressPanel", "QuestFrameRewardPanel", "WorldStateScoreFrame", "WorldStateScoreFrameInset", "QuestFrameGreetingPanel"}
 		for i = 1, #bglayers do
 			_G[bglayers[i]]:DisableDrawLayer("BACKGROUND")
 		end
-		local borderlayers = {"SpellBookFrame", "SpellBookFrameInset", "LFDParentFrame", "LFDParentFrameInset", "CharacterFrame", "CharacterFrameInset", "CharacterFrameInsetRight", "MerchantFrame", "PVPFrame", "PVPFrameInset", "PVPConquestFrameInfoButton", "PVPFrameTopInset", "PVPTeamManagementFrame", "PVPBannerFrame", "PVPBannerFrameInset", "TabardFrame", "QuestLogDetailFrame", "HelpFrame", "HelpFrameLeftInset", "HelpFrameMainInset", "TaxiFrame", "ItemTextFrame", "CharacterModelFrame", "OpenMailFrame", "EncounterJournal", "EncounterJournalInset", "EncounterJournalNavBar"}
+		local borderlayers = {"SpellBookFrame", "SpellBookFrameInset", "LFDParentFrame", "LFDParentFrameInset", "CharacterFrame", "CharacterFrameInset", "CharacterFrameInsetRight", "MerchantFrame", "PVPFrame", "PVPFrameInset", "PVPConquestFrameInfoButton", "PVPFrameTopInset", "PVPTeamManagementFrame", "PVPBannerFrame", "PVPBannerFrameInset", "TabardFrame", "QuestLogDetailFrame", "HelpFrame", "HelpFrameLeftInset", "HelpFrameMainInset", "TaxiFrame", "ItemTextFrame", "CharacterModelFrame", "OpenMailFrame", "EncounterJournal", "EncounterJournalInset", "EncounterJournalNavBar", "WorldStateScoreFrame", "WorldStateScoreFrameInset"}
 		for i = 1, #borderlayers do
 			_G[borderlayers[i]]:DisableDrawLayer("BORDER")
 		end
@@ -1473,8 +1537,12 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		QuestLogFrameCompleteButton_RightSeparator:Hide()
 		WhoListScrollFrame:GetRegions():Hide()
 		select(2, WhoListScrollFrame:GetRegions()):Hide()
+		WorldStateScoreFrameTopLeftCorner:Hide()
+		WorldStateScoreFrameTopBorder:Hide()
+		WorldStateScoreFrameTopRightCorner:Hide()
+		select(9, QuestFrameGreetingPanel:GetRegions()):Hide()
 
-		_G["ReadyCheckFrame"]:HookScript("OnShow", function(self) if UnitIsUnit("player", self.initiator) then self:Hide() end end)
+		ReadyCheckFrame:HookScript("OnShow", function(self) if UnitIsUnit("player", self.initiator) then self:Hide() end end)
 
 		-- [[ Loot ]]
 
@@ -1612,25 +1680,56 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		-- [[ Map ]]
 
 		if map == true and not IsAddOnLoaded("MetaMap") and not IsAddOnLoaded("m_Map") and not IsAddOnLoaded("Mapster") then
-			WorldMapFrameMiniBorderLeft:Hide()
-			WorldMapFrameMiniBorderLeft.Show = Aurora.dummy
-			WorldMapFrameMiniBorderRight:Hide()
-			WorldMapFrameMiniBorderRight.Show = Aurora.dummy
-			Aurora.CreateBD(WorldMapFrame)
+			WorldMapFrameMiniBorderLeft:SetAlpha(0)
+			WorldMapFrameMiniBorderRight:SetAlpha(0)
 
-			local scale = WorldMapButton:GetScale()
-			local mapbg = CreateFrame("Frame", nil, WorldMapButton)
+			local scale = WORLDMAP_WINDOWED_SIZE
+			local mapbg = CreateFrame("Frame", nil, WorldMapDetailFrame)
 			mapbg:SetPoint("TOPLEFT", -1 / scale, 1 / scale)
 			mapbg:SetPoint("BOTTOMRIGHT", 1 / scale, -1 / scale)
 			mapbg:SetFrameLevel(0)
-			Aurora.CreateBD(mapbg)
+			mapbg:SetBackdrop({ 
+				bgFile = Aurora.backdrop, 
+			})
+			mapbg:SetBackdropColor(0, 0, 0)
 
-			Aurora.ReskinClose(WorldMapFrameCloseButton)
-			WorldMapFrameCloseButton.SetPoint = Aurora.dummy
+			local frame = CreateFrame("Frame",nil,WorldMapButton)
+			frame:SetFrameStrata("HIGH")
 
-			WorldMapFrameSizeUpButton:EnableMouse(false)
-			WorldMapFrameSizeUpButton:SetAlpha(0)
-			WorldMapFrameSizeUpButton.SetAlpha = Aurora.dummy
+			hooksecurefunc("WorldMap_ToggleSizeDown", function()
+				WorldMapFrameMiniBorderLeft:SetAlpha(0)
+				WorldMapFrameMiniBorderRight:SetAlpha(0)
+				WorldMapFrameCloseButton:ClearAllPoints()
+				WorldMapFrameCloseButton:SetPoint("TOPRIGHT", WorldMapButton, "TOPRIGHT", 3, 3)
+				WorldMapFrameCloseButton:SetFrameStrata("HIGH")
+				WorldMapFrameSizeUpButton:ClearAllPoints()
+				WorldMapFrameSizeUpButton:SetPoint("TOPRIGHT", WorldMapButton, "TOPRIGHT", 3, -18)
+				WorldMapFrameSizeUpButton:SetFrameStrata("HIGH")
+				WorldMapFrameTitle:ClearAllPoints()
+				WorldMapFrameTitle:SetPoint("BOTTOMLEFT", WorldMapDetailFrame, 9, 5)
+				WorldMapFrameTitle:SetParent(frame)
+				WorldMapFrameTitle:SetFont("fonts\\FRIZQT__.TTF", 18)
+				WorldMapFrameTitle:SetTextColor(1, 1, 1)
+				WorldMapQuestShowObjectives:SetParent(frame)
+				WorldMapQuestShowObjectives:ClearAllPoints()
+				WorldMapQuestShowObjectives:SetPoint("BOTTOMRIGHT", WorldMapButton, "BOTTOMRIGHT")
+				WorldMapQuestShowObjectivesText:ClearAllPoints()
+				WorldMapQuestShowObjectivesText:SetPoint("RIGHT", WorldMapQuestShowObjectives, "LEFT", -4, 1)
+				WorldMapQuestShowObjectivesText:SetFont("fonts\\FRIZQT__.TTF", 18)
+				WorldMapQuestShowObjectivesText:SetTextColor(1, 1, 1)
+				WorldMapTrackQuest:SetParent(frame)
+				WorldMapTrackQuest:ClearAllPoints()
+				WorldMapTrackQuest:SetPoint("TOPLEFT", WorldMapDetailFrame, 9, -5)
+				WorldMapTrackQuestText:SetFont("fonts\\FRIZQT__.TTF", 18)
+				WorldMapTrackQuestText:SetTextColor(1, 1, 1)
+				WorldMapShowDigSites:SetParent(frame)
+				WorldMapShowDigSites:ClearAllPoints()
+				WorldMapShowDigSites:SetPoint("BOTTOMRIGHT", WorldMapButton, "BOTTOMRIGHT", 0, 19)
+				WorldMapShowDigSitesText:SetFont("fonts\\FRIZQT__.TTF", 18)
+				WorldMapShowDigSitesText:ClearAllPoints()
+				WorldMapShowDigSitesText:SetPoint("RIGHT",WorldMapShowDigSites,"LEFT",-4,1)
+				WorldMapShowDigSitesText:SetTextColor(1, 1, 1)
+			end)
 		end
 
 		-- [[ Text colour functions ]]
@@ -1690,6 +1789,11 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		QuestProgressText.SetTextColor = Aurora.dummy
 		ItemTextPageText:SetTextColor(1, 1, 1)
 		ItemTextPageText.SetTextColor = Aurora.dummy
+		GreetingText:SetTextColor(1, 1, 1)
+		GreetingText.SetTextColor = Aurora.dummy
+		AvailableQuestsText:SetTextColor(1, 1, 1)
+		AvailableQuestsText.SetTextColor = Aurora.dummy
+		AvailableQuestsText:SetShadowColor(0, 0, 0)
 
 		for i = 1, MAX_OBJECTIVES do
 			local objective = _G["QuestInfoObjective"..i]
@@ -1761,6 +1865,10 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		StaticPopup1MoneyInputFrameCopper:SetPoint("LEFT", StaticPopup1MoneyInputFrameSilver, "RIGHT", 1, 0)
 		StaticPopup2MoneyInputFrameSilver:SetPoint("LEFT", StaticPopup2MoneyInputFrameGold, "RIGHT", 1, 0)
 		StaticPopup2MoneyInputFrameCopper:SetPoint("LEFT", StaticPopup2MoneyInputFrameSilver, "RIGHT", 1, 0)
+		WorldStateScoreFrameTab2:SetPoint("LEFT", WorldStateScoreFrameTab1, "RIGHT", -15, 0)
+		WorldStateScoreFrameTab3:SetPoint("LEFT", WorldStateScoreFrameTab2, "RIGHT", -15, 0)
+		WhoFrameWhoButton:SetPoint("RIGHT", WhoFrameAddFriendButton, "LEFT", -1, 0)
+		WhoFrameAddFriendButton:SetPoint("RIGHT", WhoFrameGroupInviteButton, "LEFT", -1, 0)
 
 		hooksecurefunc("QuestFrame_ShowQuestPortrait", function(parentFrame, portrait, text, name, x, y)
 			local parent = parentFrame:GetName()
@@ -1827,7 +1935,7 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 
 		Aurora.Reskin(select(6, PVPBannerFrame:GetChildren()))
 
-		local closebuttons = {"LFDParentFrameCloseButton", "CharacterFrameCloseButton", "PVPFrameCloseButton", "SpellBookFrameCloseButton", "HelpFrameCloseButton", "PVPBannerFrameCloseButton", "RaidInfoCloseButton", "ContainerFrame1CloseButton", "ContainerFrame2CloseButton", "ContainerFrame3CloseButton", "ContainerFrame4CloseButton", "ContainerFrame5CloseButton", "RolePollPopupCloseButton", "ItemRefCloseButton", "TokenFramePopupCloseButton", "ReputationDetailCloseButton", "ChannelFrameDaughterFrameDetailCloseButton", "EncounterJournalCloseButton"}
+		local closebuttons = {"LFDParentFrameCloseButton", "CharacterFrameCloseButton", "PVPFrameCloseButton", "SpellBookFrameCloseButton", "HelpFrameCloseButton", "PVPBannerFrameCloseButton", "RaidInfoCloseButton", "ContainerFrame1CloseButton", "ContainerFrame2CloseButton", "ContainerFrame3CloseButton", "ContainerFrame4CloseButton", "ContainerFrame5CloseButton", "RolePollPopupCloseButton", "ItemRefCloseButton", "TokenFramePopupCloseButton", "ReputationDetailCloseButton", "ChannelFrameDaughterFrameDetailCloseButton", "EncounterJournalCloseButton", "WorldStateScoreFrameCloseButton"}
 		for i = 1, #closebuttons do
 			local closebutton = _G[closebuttons[i]]
 			Aurora.ReskinClose(closebutton)
@@ -2233,6 +2341,11 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		Aurora.ReskinArrow(BarberShopFrameSelector2Next, 2)
 		Aurora.ReskinArrow(BarberShopFrameSelector3Prev, 1)
 		Aurora.ReskinArrow(BarberShopFrameSelector3Next, 2)
+	elseif addon == "Blizzard_BattlefieldMinimap" then
+		Aurora.SetBD(BattlefieldMinimap, -1, 1, -5, 3)
+		BattlefieldMinimapCorner:Hide()
+		BattlefieldMinimapBackground:Hide()
+		BattlefieldMinimapCloseButton:Hide()
 	elseif addon == "Blizzard_BindingUI" then
 		Aurora.SetBD(KeyBindingFrame, 2, 0, -38, 10)
 		KeyBindingFrame:DisableDrawLayer("BACKGROUND")
@@ -2356,6 +2469,16 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		ScriptErrorsFrameDialogBG:Hide()
 		Aurora.CreateBD(ScriptErrorsFrame)
 		Aurora.CreateSD(ScriptErrorsFrame)
+
+		FrameStackTooltip:SetScale(UIParent:GetScale())
+		FrameStackTooltip:SetBackdrop(nil)
+
+		local bg = CreateFrame("Frame", nil, FrameStackTooltip)
+		bg:SetPoint("TOPLEFT")
+		bg:SetPoint("BOTTOMRIGHT")
+		bg:SetFrameLevel(FrameStackTooltip:GetFrameLevel()-1)
+		Aurora.CreateBD(bg, .6)
+
 		Aurora.ReskinClose(ScriptErrorsFrameClose)
 		Aurora.ReskinScroll(ScriptErrorsFrameScrollFrameScrollBar)
 		Aurora.Reskin(select(4, ScriptErrorsFrame:GetChildren()))
@@ -2933,23 +3056,6 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 			Aurora.CreateBD(slot.bd, .25)
 			_G["Inspect"..slots[i].."SlotIconTexture"]:SetTexCoord(.08, .92, .08, .92)
 		end
-
-		local slothandler = CreateFrame("Frame")
-		slothandler:RegisterEvent("INSPECT_READY")
-		slothandler:RegisterEvent("UNIT_INVENTORY_CHANGED")
-		slothandler:SetScript("OnEvent", function()
-			for i = 1, #slots do
-				local slot = _G["Inspect"..slots[i].."Slot"]
-				local ic = _G["Inspect"..slots[i].."SlotIconTexture"]
-				if GetInventoryItemLink("target", i) then
-					ic:SetAlpha(1)
-					slot.bd:SetAlpha(1)
-				else
-					ic:SetAlpha(0)
-					slot.bd:SetAlpha(0)
-				end
-			end
-		end)
 
 		Aurora.ReskinClose(InspectFrameCloseButton)
 	elseif addon == "Blizzard_ItemSocketingUI" then
