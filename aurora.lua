@@ -1149,6 +1149,21 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 			end
 		end)
 
+		PaperDollFrameItemFlyoutButtons:HookScript("OnShow", function(self)
+			for i = 1, PDFITEMFLYOUT_MAXITEMS do
+				local bu = _G["PaperDollFrameItemFlyoutButtons"..i]
+				if bu and not bu.reskinned then
+					bu:SetNormalTexture("")
+					Aurora.CreateBG(bu)
+
+					_G["PaperDollFrameItemFlyoutButtons"..i.."IconTexture"]:SetTexCoord(.08, .92, .08, .92)
+
+					bu.reskinned = true
+				end
+
+			end
+		end)
+
 		-- Quest Frame
 
 		QuestInfoSkillPointFrameIconTexture:SetSize(40, 40)
@@ -1367,7 +1382,7 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 
 		-- [[ Hide regions ]]
 
-		local bglayers = {"FriendsFrame", "SpellBookFrame", "LFDParentFrame", "LFDParentFrameInset", "WhoFrameColumnHeader1", "WhoFrameColumnHeader2", "WhoFrameColumnHeader3", "WhoFrameColumnHeader4", "RaidInfoInstanceLabel", "RaidInfoIDLabel", "CharacterFrame", "CharacterFrameInset", "CharacterFrameInsetRight", "GossipFrameGreetingPanel", "PVPFrame", "PVPFrameInset", "PVPFrameTopInset", "PVPTeamManagementFrame", "PVPTeamManagementFrameHeader1", "PVPTeamManagementFrameHeader2", "PVPTeamManagementFrameHeader3", "PVPTeamManagementFrameHeader4", "PVPBannerFrame", "PVPBannerFrameInset", "LFRQueueFrame", "LFRBrowseFrame", "HelpFrameMainInset", "CharacterModelFrame", "HelpFrame", "HelpFrameLeftInset", "QuestFrameDetailPanel", "QuestFrameProgressPanel", "QuestFrameRewardPanel", "WorldStateScoreFrame", "WorldStateScoreFrameInset", "QuestFrameGreetingPanel"}
+		local bglayers = {"FriendsFrame", "SpellBookFrame", "LFDParentFrame", "LFDParentFrameInset", "WhoFrameColumnHeader1", "WhoFrameColumnHeader2", "WhoFrameColumnHeader3", "WhoFrameColumnHeader4", "RaidInfoInstanceLabel", "RaidInfoIDLabel", "CharacterFrame", "CharacterFrameInset", "CharacterFrameInsetRight", "GossipFrameGreetingPanel", "PVPFrame", "PVPFrameInset", "PVPFrameTopInset", "PVPTeamManagementFrame", "PVPTeamManagementFrameHeader1", "PVPTeamManagementFrameHeader2", "PVPTeamManagementFrameHeader3", "PVPTeamManagementFrameHeader4", "PVPBannerFrame", "PVPBannerFrameInset", "LFRQueueFrame", "LFRBrowseFrame", "HelpFrameMainInset", "CharacterModelFrame", "HelpFrame", "HelpFrameLeftInset", "QuestFrameDetailPanel", "QuestFrameProgressPanel", "QuestFrameRewardPanel", "WorldStateScoreFrame", "WorldStateScoreFrameInset", "QuestFrameGreetingPanel", "PaperDollFrameItemFlyoutButtons"}
 		for i = 1, #bglayers do
 			_G[bglayers[i]]:DisableDrawLayer("BACKGROUND")
 		end
@@ -1379,7 +1394,7 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		for i = 1, #overlayers do
 			_G[overlayers[i]]:DisableDrawLayer("OVERLAY")
 		end
-		local artlayers = {"GossipFrameGreetingPanel", "PVPConquestFrame", "TabardFrame", "GuildRegistrarFrame", "QuestLogDetailFrame"}
+		local artlayers = {"GossipFrameGreetingPanel", "PVPConquestFrame", "TabardFrame", "GuildRegistrarFrame", "QuestLogDetailFrame", "PaperDollFrameItemFlyoutButtons"}
 		for i = 1, #artlayers do
 			_G[artlayers[i]]:DisableDrawLayer("ARTWORK")
 		end
@@ -1626,6 +1641,7 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		WorldStateScoreFrameTopRightCorner:Hide()
 		select(9, QuestFrameGreetingPanel:GetRegions()):Hide()
 		QuestInfoItemHighlight:GetRegions():Hide()
+		QuestInfoSpellObjectiveFrameNameFrame:Hide()
 
 		ReadyCheckFrame:HookScript("OnShow", function(self) if UnitIsUnit("player", self.initiator) then self:Hide() end end)
 
@@ -1886,6 +1902,11 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		AvailableQuestsText:SetTextColor(1, 1, 1)
 		AvailableQuestsText.SetTextColor = Aurora.dummy
 		AvailableQuestsText:SetShadowColor(0, 0, 0)
+		QuestInfoSpellObjectiveLearnLabel:SetTextColor(1, 1, 1)
+		QuestInfoSpellObjectiveLearnLabel.SetTextColor = Aurora.dummy
+		CurrentQuestsText:SetTextColor(1, 1, 1)
+		CurrentQuestsText.SetTextColor = Aurora.dummy
+		CurrentQuestsText:SetShadowColor(0, 0, 0)
 
 		for i = 1, MAX_OBJECTIVES do
 			local objective = _G["QuestInfoObjective"..i]
@@ -2402,6 +2423,11 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 		select(2, AchievementFrameAchievements:GetChildren()):Hide()
 		AchievementFrameAchievementsBackground:Hide()
 		select(3, AchievementFrameAchievements:GetRegions()):Hide()
+		AchievementFrameStatsBG:Hide()
+		AchievementFrameSummaryAchievementsHeaderHeader:Hide()
+		AchievementFrameSummaryCategoriesHeaderTexture:Hide()
+		select(3, AchievementFrameStats:GetChildren()):Hide()
+
 		local first = 1
 		hooksecurefunc("AchievementFrameCategories_Update", function()
 			if first == 1 then
@@ -2411,19 +2437,154 @@ Skin:SetScript("OnEvent", function(self, event, addon)
 				first = 0
 			end
 		end)
+
 		AchievementFrameHeader:ClearAllPoints()
 		AchievementFrameHeader:SetPoint("TOP", AchievementFrame, "TOP", 0, 36)
 		AchievementFrameFilterDropDown:ClearAllPoints()
 		AchievementFrameFilterDropDown:SetPoint("RIGHT", AchievementFrameHeader, "RIGHT", -120, 2)
 		AchievementFrameFilterDropDownText:ClearAllPoints()
 		AchievementFrameFilterDropDownText:SetPoint("CENTER", -10, 1)
-		AchievementFrameStatsBG:SetWidth(500)
+
+		AchievementFrameSummaryCategoriesStatusBar:SetStatusBarTexture(Aurora.backdrop)
 
 		for i = 1, 3 do
 			local tab = _G["AchievementFrameTab"..i]
 			if tab then
 				Aurora.CreateTab(tab)
 			end
+		end
+
+		AchievementFrameSummaryCategoriesStatusBar:SetStatusBarTexture(Aurora.backdrop)
+		AchievementFrameSummaryCategoriesStatusBar:GetStatusBarTexture():SetGradient("VERTICAL", 0, .4, 0, 0, .6, 0)
+		AchievementFrameSummaryCategoriesStatusBarLeft:Hide()
+		AchievementFrameSummaryCategoriesStatusBarMiddle:Hide()
+		AchievementFrameSummaryCategoriesStatusBarRight:Hide()
+		AchievementFrameSummaryCategoriesStatusBarFillBar:Hide()
+		AchievementFrameSummaryCategoriesStatusBarTitle:SetTextColor(1, 1, 1)
+		AchievementFrameSummaryCategoriesStatusBarTitle:SetPoint("LEFT", AchievementFrameSummaryCategoriesStatusBar, "LEFT", 6, 0)
+		AchievementFrameSummaryCategoriesStatusBarText:SetPoint("RIGHT", AchievementFrameSummaryCategoriesStatusBar, "RIGHT", -5, 0)
+
+		local bg = CreateFrame("Frame", nil, AchievementFrameSummaryCategoriesStatusBar)
+		bg:SetPoint("TOPLEFT", -1, 1)
+		bg:SetPoint("BOTTOMRIGHT", 1, -1)
+		bg:SetFrameLevel(AchievementFrameSummaryCategoriesStatusBar:GetFrameLevel()-1)
+		Aurora.CreateBD(bg, .25)
+
+		for i = 1, 7 do
+			local bu = _G["AchievementFrameAchievementsContainerButton"..i]
+			bu:DisableDrawLayer("BORDER")
+
+			local bd = _G["AchievementFrameAchievementsContainerButton"..i.."Background"]
+
+			bd:SetTexture(Aurora.backdrop)
+			bd:SetVertexColor(0, 0, 0, .25)
+
+			local text = _G["AchievementFrameAchievementsContainerButton"..i.."Description"]
+			text:SetTextColor(.9, .9, .9)
+			text.SetTextColor = Aurora.dummy
+			text:SetShadowOffset(1, -1)
+			text.SetShadowOffset = Aurora.dummy
+
+			_G["AchievementFrameAchievementsContainerButton"..i.."TitleBackground"]:Hide()
+			_G["AchievementFrameAchievementsContainerButton"..i.."Glow"]:Hide()
+			_G["AchievementFrameAchievementsContainerButton"..i.."RewardBackground"]:SetAlpha(0)
+			_G["AchievementFrameAchievementsContainerButton"..i.."PlusMinus"]:SetAlpha(0)
+			_G["AchievementFrameAchievementsContainerButton"..i.."Highlight"]:SetAlpha(0)
+			_G["AchievementFrameAchievementsContainerButton"..i.."IconOverlay"]:Hide()
+
+			local bg = CreateFrame("Frame", nil, bu)
+			bg:SetPoint("TOPLEFT", 2, -2)
+			bg:SetPoint("BOTTOMRIGHT", -2, 2)
+			Aurora.CreateBD(bg, 0)
+
+			local ic = _G["AchievementFrameAchievementsContainerButton"..i.."IconTexture"]
+			ic:SetTexCoord(.08, .92, .08, .92)
+			Aurora.CreateBG(ic)
+		end
+
+		hooksecurefunc("AchievementObjectives_DisplayCriteria", function()
+			for i = 1, 16 do
+				local name = _G["AchievementFrameCriteria"..i.."Name"]
+				if name and select(2, name:GetTextColor()) == 0 then
+					name:SetTextColor(1, 1, 1)
+				end
+			end
+		end)
+
+		hooksecurefunc("AchievementButton_GetProgressBar", function(index)
+			local bar = _G["AchievementFrameProgressBar"..index]
+			if not bar.reskinned then
+				bar:SetStatusBarTexture(Aurora.backdrop)
+				bar.reskinned = true
+			end
+		end)
+
+		hooksecurefunc("AchievementFrameSummary_UpdateAchievements", function()
+			for i = 1, ACHIEVEMENTUI_MAX_SUMMARY_ACHIEVEMENTS do
+				local bu = _G["AchievementFrameSummaryAchievement"..i]
+				if not bu.reskinned then
+					bu:DisableDrawLayer("BORDER")
+
+					local bd = _G["AchievementFrameSummaryAchievement"..i.."Background"]
+
+					bd:SetTexture(Aurora.backdrop)
+					bd:SetVertexColor(0, 0, 0, .25)
+
+					_G["AchievementFrameSummaryAchievement"..i.."TitleBackground"]:Hide()
+					_G["AchievementFrameSummaryAchievement"..i.."Glow"]:Hide()
+					_G["AchievementFrameSummaryAchievement"..i.."Highlight"]:SetAlpha(0)
+					_G["AchievementFrameSummaryAchievement"..i.."IconOverlay"]:Hide()
+
+					local text = _G["AchievementFrameSummaryAchievement"..i.."Description"]
+					text:SetTextColor(.9, .9, .9)
+					text.SetTextColor = Aurora.dummy
+					text:SetShadowOffset(1, -1)
+					text.SetShadowOffset = Aurora.dummy
+
+					local bg = CreateFrame("Frame", nil, bu)
+					bg:SetPoint("TOPLEFT", 2, -2)
+					bg:SetPoint("BOTTOMRIGHT", -2, 2)
+					Aurora.CreateBD(bg, 0)
+
+					local ic = _G["AchievementFrameSummaryAchievement"..i.."IconTexture"]
+					ic:SetTexCoord(.08, .92, .08, .92)
+					Aurora.CreateBG(ic)
+
+					bu.reskinned = true
+				end
+			end
+		end)
+
+		for i = 1, 8 do
+			local bu = _G["AchievementFrameSummaryCategoriesCategory"..i]
+			local bar = bu:GetStatusBarTexture()
+			local label = _G["AchievementFrameSummaryCategoriesCategory"..i.."Label"]
+
+			bu:SetStatusBarTexture(Aurora.backdrop)
+			bar:SetGradient("VERTICAL", 0, .4, 0, 0, .6, 0)
+			label:SetTextColor(1, 1, 1)
+			label:SetPoint("LEFT", bu, "LEFT", 6, 0)
+
+			local bg = CreateFrame("Frame", nil, bu)
+			bg:SetPoint("TOPLEFT", -1, 1)
+			bg:SetPoint("BOTTOMRIGHT", 1, -1)
+			bg:SetFrameLevel(bu:GetFrameLevel()-1)
+			Aurora.CreateBD(bg, .25)
+			
+			_G["AchievementFrameSummaryCategoriesCategory"..i.."Left"]:Hide()
+			_G["AchievementFrameSummaryCategoriesCategory"..i.."Middle"]:Hide()
+			_G["AchievementFrameSummaryCategoriesCategory"..i.."Right"]:Hide()
+			_G["AchievementFrameSummaryCategoriesCategory"..i.."FillBar"]:Hide()
+			_G["AchievementFrameSummaryCategoriesCategory"..i.."ButtonHighlight"]:SetAlpha(0)
+			_G["AchievementFrameSummaryCategoriesCategory"..i.."Text"]:SetPoint("RIGHT", bu, "RIGHT", -5, 0)
+		end
+
+		for i = 1, 20 do
+			_G["AchievementFrameStatsContainerButton"..i.."BG"]:Hide()
+			_G["AchievementFrameStatsContainerButton"..i.."BG"].Show = Aurora.dummy
+			_G["AchievementFrameStatsContainerButton"..i.."HeaderLeft"]:SetAlpha(0)
+			_G["AchievementFrameStatsContainerButton"..i.."HeaderMiddle"]:SetAlpha(0)
+			_G["AchievementFrameStatsContainerButton"..i.."HeaderRight"]:SetAlpha(0)
 		end
 
 		Aurora.ReskinClose(AchievementFrameCloseButton)
